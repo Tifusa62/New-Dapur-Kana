@@ -43,18 +43,22 @@
   
     // Fungsi Login
     async function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
 
-      if (error) {
-        document.getElementById('loginError').classList.remove('hidden');
-      } else {
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('menuSection').classList.remove('hidden');
-      }
-    }
+  console.log("Mencoba login dengan:", email);
 
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  console.log("Login result:", data, error);
+
+  if (error) {
+    document.getElementById('loginError').classList.remove('hidden');
+  } else {
+    document.getElementById('loginSection').classList.add('hidden');
+    document.getElementById('menuSection').classList.remove('hidden');
+  }
+}
     // Fungsi Logout
     async function logout() {
       await supabase.auth.signOut();
