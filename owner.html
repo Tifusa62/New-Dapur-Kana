@@ -15,7 +15,7 @@
       <h2 class="text-xl font-bold mb-4">🔐 Login Owner</h2>
       <input type="email" id="email" placeholder="Email" class="w-full border p-2 rounded mb-3" required>
       <input type="password" id="password" placeholder="Password" class="w-full border p-2 rounded mb-3" required>
-      <button onclick="login()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Login</button>
+     <button id="loginBtn" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Login</button>
       <p id="loginError" class="text-red-500 text-sm mt-3 hidden">❌ Email atau Password salah.</p>
     </div>
 
@@ -35,7 +35,7 @@
 
   </div>
 
-   <script type="module">
+  <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
   const supabase = createClient(
@@ -43,6 +43,7 @@
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydHFvYW1nY3V3eXZ1cHJwdmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMjQzODMsImV4cCI6MjA2OTkwMDM4M30.yEED0Dte55TYy6UOkJ0wVVkeYjAtcDk18MRGMLhxIpY'
   );
 
+  // Fungsi login
   document.getElementById('loginBtn').addEventListener('click', async () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -56,62 +57,63 @@
       document.getElementById('loginSection').classList.add('hidden');
       document.getElementById('menuSection').classList.remove('hidden');
     }
-  
-    // Fungsi Logout
-    async function logout() {
-      await supabase.auth.signOut();
-      location.reload();
+  });
+
+  // Fungsi logout
+  window.logout = async function () {
+    await supabase.auth.signOut();
+    location.reload();
+  };
+
+  // Cek sesi login saat halaman dibuka
+  window.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('menuSection').classList.remove('hidden');
     }
+  });
 
-    // Cek apakah sudah login
-    window.addEventListener('DOMContentLoaded', async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        document.getElementById('loginSection').classList.add('hidden');
-        document.getElementById('menuSection').classList.remove('hidden');
-      }
-    });
+  // Upload menu
+  document.getElementById('menuForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-    // Upload Menu
-    document.getElementById('menuForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    const name = document.getElementById('name').value;
+    const price = parseInt(document.getElementById('price').value);
+    const description = document.getElementById('description').value;
+    const category = document.getElementById('category').value;
+    const imageFile = document.getElementById('image').files[0];
 
-      const name = document.getElementById('name').value;
-      const price = parseInt(document.getElementById('price').value);
-      const description = document.getElementById('description').value;
-      const category = document.getElementById('category').value;
-      const imageFile = document.getElementById('image').files[0];
+    if (!imageFile) return alert('Pilih gambar terlebih dahulu.');
 
-      if (!imageFile) return alert('Pilih gambar terlebih dahulu.');
+    const fileExt = imageFile.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `${category}/${fileName}`;
 
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${category}/${fileName}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('menu')
+      .upload(filePath, imageFile);
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('menu')
-        .upload(filePath, imageFile);
+    if (uploadError) return alert('Upload gagal: ' + uploadError.message);
 
-      if (uploadError) return alert('Upload gagal: ' + uploadError.message);
+    const { data: publicUrlData } = supabase
+      .storage
+      .from('menu')
+      .getPublicUrl(filePath);
 
-      const { data: publicUrlData } = supabase
-        .storage
-        .from('menu')
-        .getPublicUrl(filePath);
+    const image_url = publicUrlData.publicUrl;
 
-      const image_url = publicUrlData.publicUrl;
+    const { error: insertError } = await supabase
+      .from('menu')
+      .insert([{ name, price, description, category, image_url }]);
 
-      const { error: insertError } = await supabase
-        .from('menu')
-        .insert([{ name, price, description, category, image_url }]);
-
-      if (insertError) {
-        alert('Gagal simpan: ' + insertError.message);
-      } else {
-        alert('Menu berhasil ditambahkan!');
-        document.getElementById('menuForm').reset();
-      }
-    });
-  </script>
+    if (insertError) {
+      alert('Gagal simpan: ' + insertError.message);
+    } else {
+      alert('Menu berhasil ditambahkan!');
+      document.getElementById('menuForm').reset();
+    }
+  });
+</script>
 </body>
 </html>
