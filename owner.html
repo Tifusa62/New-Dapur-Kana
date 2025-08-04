@@ -52,8 +52,10 @@
   console.log("Login result:", data, error);
 
   if (error) {
+    document.getElementById('loginError').textContent = `Login gagal: ${error.message}`;
     document.getElementById('loginError').classList.remove('hidden');
   } else {
+    document.getElementById('loginError').classList.add('hidden');
     document.getElementById('loginSection').classList.add('hidden');
     document.getElementById('menuSection').classList.remove('hidden');
   }
