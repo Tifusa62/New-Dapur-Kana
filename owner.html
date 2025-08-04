@@ -3,63 +3,75 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Owner Panel - Dapur Kana</title>
+  <title>Login Owner - Dapur Kana</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 text-gray-800 p-4">
-  <div class="max-w-2xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">Panel Owner - Dapur Kana</h1>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md bg-white rounded-xl shadow-xl p-6">
 
-    <!-- Form Upload Menu -->
-    <form id="menuForm" class="space-y-3 bg-white p-4 rounded shadow">
-      <h2 class="text-xl font-semibold">Tambah Menu Baru</h2>
-      <input type="text" id="name" placeholder="Nama menu" required class="w-full border p-2 rounded" />
-      <input type="number" id="price" placeholder="Harga (angka)" required class="w-full border p-2 rounded" />
-      <textarea id="description" placeholder="Deskripsi menu" required class="w-full border p-2 rounded"></textarea>
-      <select id="category" required class="w-full border p-2 rounded">
-        <option value="">Pilih kategori</option>
-        <option value="makanan">Makanan</option>
-        <option value="dessert">Dessert</option>
-        <option value="frozen">Frozen</option>
-      </select>
-      <input type="file" id="image" accept="image/*" required class="w-full border p-2 rounded" />
-      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Tambah Menu</button>
-    </form>
+    <!-- Login Form -->
+    <div id="loginSection">
+      <h2 class="text-xl font-bold mb-4">🔐 Login Owner</h2>
+      <input type="email" id="email" placeholder="Email" class="w-full border p-2 rounded mb-3" required>
+      <input type="password" id="password" placeholder="Password" class="w-full border p-2 rounded mb-3" required>
+      <button onclick="login()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">Login</button>
+      <p id="loginError" class="text-red-500 text-sm mt-3 hidden">❌ Email atau Password salah.</p>
+    </div>
 
-    <!-- List Menu -->
-    <h2 class="text-xl font-bold mt-10 mb-4">Daftar Menu</h2>
-    <div id="menuList" class="space-y-4"></div>
-  </div>
-
-  <!-- Modal Edit -->
-  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 items-center justify-center p-4">
-    <div class="bg-white p-6 rounded-xl w-full max-w-md space-y-4">
-      <h2 class="text-xl font-bold">Edit Menu</h2>
-      <form id="editForm" class="space-y-3">
-        <input type="text" id="editName" required class="w-full border p-2 rounded" />
-        <input type="number" id="editPrice" required class="w-full border p-2 rounded" />
-        <textarea id="editDescription" required class="w-full border p-2 rounded"></textarea>
-        <select id="editCategory" required class="w-full border p-2 rounded">
-          <option value="dessert">Dessert</option>
-          <option value="makanan">Makanan</option>
-          <option value="frozen">Frozen</option>
-        </select>
-        <input type="file" id="editImage" accept="image/*" class="w-full border p-2 rounded" />
-        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Simpan Perubahan</button>
-        <button type="button" onclick="closeEditModal()" class="ml-2 text-sm text-gray-500">Batal</button>
+    <!-- Menu Form -->
+    <div id="menuSection" class="hidden">
+      <h2 class="text-xl font-bold mb-4">📝 Tambah Menu</h2>
+      <form id="menuForm" class="space-y-3">
+        <input type="text" id="name" placeholder="Nama Menu" required class="w-full border p-2 rounded" />
+        <input type="number" id="price" placeholder="Harga (angka)" required class="w-full border p-2 rounded" />
+        <input type="text" id="description" placeholder="Deskripsi" class="w-full border p-2 rounded" />
+        <input type="text" id="category" placeholder="Kategori" class="w-full border p-2 rounded" />
+        <input type="file" id="image" accept="image/*" required class="w-full border p-2 rounded" />
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">Tambah Menu</button>
+        <button type="button" onclick="logout()" class="w-full mt-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Logout</button>
       </form>
     </div>
+
   </div>
 
   <script>
-    const supabaseUrl = 'https://artqoamgcuwyvuprpvgt.supabase.co';
+    // Ganti dengan URL dan Key Supabase kamu
+  const supabaseUrl = 'https://artqoamgcuwyvuprpvgt.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydHFvYW1nY3V3eXZ1cHJwdmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMjQzODMsImV4cCI6MjA2OTkwMDM4M30.yEED0Dte55TYy6UOkJ0wVVkeYjAtcDk18MRGMLhxIpY';
   const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  
+    // Fungsi Login
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    const menuForm = document.getElementById('menuForm');
+      if (error) {
+        document.getElementById('loginError').classList.remove('hidden');
+      } else {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('menuSection').classList.remove('hidden');
+      }
+    }
 
-    menuForm.addEventListener('submit', async function (e) {
+    // Fungsi Logout
+    async function logout() {
+      await supabase.auth.signOut();
+      location.reload();
+    }
+
+    // Cek apakah sudah login
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('menuSection').classList.remove('hidden');
+      }
+    });
+
+    // Upload Menu
+    document.getElementById('menuForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const name = document.getElementById('name').value;
@@ -68,125 +80,36 @@
       const category = document.getElementById('category').value;
       const imageFile = document.getElementById('image').files[0];
 
-      if (!imageFile) return alert('Pilih gambar!');
+      if (!imageFile) return alert('Pilih gambar terlebih dahulu.');
 
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${category}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('menu').upload(filePath, imageFile);
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('menu')
+        .upload(filePath, imageFile);
+
       if (uploadError) return alert('Upload gagal: ' + uploadError.message);
 
-      const { data: imageData } = supabase.storage.from('menu').getPublicUrl(filePath);
-      const imageUrl = imageData.publicUrl;
+      const { data: publicUrlData } = supabase
+        .storage
+        .from('menu')
+        .getPublicUrl(filePath);
 
-      const { error } = await supabase.from('menu').insert([{ name, price, description, category, image_url: imageUrl }]);
-      if (error) return alert('Gagal tambah menu: ' + error.message);
+      const image_url = publicUrlData.publicUrl;
 
-      alert('Menu berhasil ditambahkan!');
-      menuForm.reset();
-      loadMenu();
-    });
+      const { error: insertError } = await supabase
+        .from('menu')
+        .insert([{ name, price, description, category, image_url }]);
 
-    async function loadMenu() {
-      const { data: menuItems, error } = await supabase.from('menu').select('*').order('id', { ascending: false });
-      if (error) return document.getElementById('menuList').innerHTML = `<p class="text-red-500">Gagal memuat menu</p>`;
-
-      const container = document.getElementById('menuList');
-      container.innerHTML = menuItems.map(item => `
-        <div class="p-4 bg-white shadow rounded space-y-2">
-          <div class="flex items-center space-x-4">
-            <img src="${item.image_url}" alt="${item.name}" class="w-16 h-16 object-cover rounded">
-            <div class="flex-1">
-              <h3 class="text-lg font-semibold">${item.name}</h3>
-              <p class="text-sm text-gray-600">${item.description}</p>
-              <p class="text-sm text-blue-500">Rp ${item.price.toLocaleString()}</p>
-            </div>
-            <div class="flex space-x-2">
-              <button onclick="editMenu(${item.id})" class="px-3 py-1 text-sm bg-yellow-400 text-white rounded">Edit</button>
-              <button onclick="deleteMenu(${item.id}, '${item.image_url}')" class="px-3 py-1 text-sm bg-red-500 text-white rounded">Hapus</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function deleteMenu(id, imageUrl) {
-      if (!confirm('Yakin ingin menghapus menu ini?')) return;
-
-      const path = imageUrl.split('/storage/v1/object/public/menu/')[1];
-      const { error: deleteFileError } = await supabase.storage.from('menu').remove([path]);
-
-      if (deleteFileError) return alert('Gagal hapus gambar: ' + deleteFileError.message);
-
-      const { error: deleteDbError } = await supabase.from('menu').delete().eq('id', id);
-      if (deleteDbError) return alert('Gagal hapus data: ' + deleteDbError.message);
-
-      alert('Menu berhasil dihapus!');
-      loadMenu();
-    }
-
-    // Edit Menu
-    let currentEditId = null;
-    let currentImagePath = null;
-
-    async function editMenu(id) {
-      currentEditId = id;
-      const { data: item, error } = await supabase.from('menu').select('*').eq('id', id).single();
-      if (error) return alert('Gagal ambil data menu');
-
-      document.getElementById('editName').value = item.name;
-      document.getElementById('editPrice').value = item.price;
-      document.getElementById('editDescription').value = item.description;
-      document.getElementById('editCategory').value = item.category;
-      currentImagePath = item.image_url;
-
-      document.getElementById('editModal').classList.remove('hidden');
-    }
-
-    function closeEditModal() {
-      document.getElementById('editModal').classList.add('hidden');
-      currentEditId = null;
-    }
-
-    document.getElementById('editForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-
-      const name = document.getElementById('editName').value;
-      const price = parseInt(document.getElementById('editPrice').value);
-      const description = document.getElementById('editDescription').value;
-      const category = document.getElementById('editCategory').value;
-      const imageFile = document.getElementById('editImage').files[0];
-
-      let image_url = currentImagePath;
-
-      if (imageFile) {
-        const oldPath = currentImagePath.split('/storage/v1/object/public/menu/')[1];
-        await supabase.storage.from('menu').remove([oldPath]);
-
-        const fileExt = imageFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${category}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage.from('menu').upload(filePath, imageFile);
-        if (uploadError) return alert('Upload gagal');
-
-        const { data: publicUrlData } = supabase.storage.from('menu').getPublicUrl(filePath);
-        image_url = publicUrlData.publicUrl;
+      if (insertError) {
+        alert('Gagal simpan: ' + insertError.message);
+      } else {
+        alert('Menu berhasil ditambahkan!');
+        document.getElementById('menuForm').reset();
       }
-
-      const { error } = await supabase.from('menu').update({
-        name, price, description, category, image_url
-      }).eq('id', currentEditId);
-
-      if (error) return alert('Update gagal: ' + error.message);
-
-      alert('Berhasil update menu!');
-      closeEditModal();
-      loadMenu();
     });
-
-    loadMenu();
   </script>
 </body>
 </html>
