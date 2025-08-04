@@ -35,31 +35,28 @@
 
   </div>
 
-  <script>
-    // Ganti dengan URL dan Key Supabase kamu
-  const supabaseUrl = 'https://artqoamgcuwyvuprpvgt.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydHFvYW1nY3V3eXZ1cHJwdmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMjQzODMsImV4cCI6MjA2OTkwMDM4M30.yEED0Dte55TYy6UOkJ0wVVkeYjAtcDk18MRGMLhxIpY';
+   <script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  const supabase = createClient(
+    'https://artqoamgcuwyvuprpvgt.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydHFvYW1nY3V3eXZ1cHJwdmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMjQzODMsImV4cCI6MjA2OTkwMDM4M30.yEED0Dte55TYy6UOkJ0wVVkeYjAtcDk18MRGMLhxIpY'
+  );
+
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      document.getElementById('loginError').textContent = `Login gagal: ${error.message}`;
+      document.getElementById('loginError').classList.remove('hidden');
+    } else {
+      document.getElementById('loginSection').classList.add('hidden');
+      document.getElementById('menuSection').classList.remove('hidden');
+    }
   
-    // Fungsi Login
-    async function login() {
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-
-  console.log("Mencoba login dengan:", email);
-
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  console.log("Login result:", data, error);
-
-  if (error) {
-    document.getElementById('loginError').textContent = `Login gagal: ${error.message}`;
-    document.getElementById('loginError').classList.remove('hidden');
-  } else {
-    document.getElementById('loginError').classList.add('hidden');
-    document.getElementById('loginSection').classList.add('hidden');
-    document.getElementById('menuSection').classList.remove('hidden');
-  }
-}
     // Fungsi Logout
     async function logout() {
       await supabase.auth.signOut();
