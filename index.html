@@ -139,16 +139,16 @@
     </div>
 
     <!-- Success Modal -->
-    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-8 text-center">
-            <div class="text-green-500 text-6xl mb-4">✓</div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Pesanan Berhasil!</h2>
-            <p class="text-gray-600 mb-6">Terima kasih atas pesanan Anda. Kami akan segera menghubungi Anda untuk konfirmasi.</p>
-            <button id="closeSuccessModal" class="order-btn text-white px-8 py-3 rounded-lg font-medium">
-                Tutup
-            </button>
-        </div>
+   <div class="bg-white rounded-xl max-w-md w-full p-8 text-center">
+    <div class="text-green-500 text-6xl mb-4">✓</div>
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Pesanan Berhasil!</h2>
+    <p class="text-gray-600 mb-6">Kami akan segera menghubungi Anda. Anda juga bisa langsung hubungi kami:</p>
+    <div class="flex flex-col gap-3 mb-6">
+        <a href="#" id="hubungiTelegram" target="_blank" class="bg-blue-500 text-white px-4 py-3 rounded-lg font-medium">Hubungi via Telegram</a>
+        <a href="#" id="hubungiWhatsapp" target="_blank" class="bg-green-500 text-white px-4 py-3 rounded-lg font-medium">Hubungi via WhatsApp</a>
     </div>
+    <button id="closeSuccessModal" class="order-btn text-white px-8 py-3 rounded-lg font-medium">Tutup</button>
+</div>
 
     <script>
         // Supabase Configuration
@@ -291,7 +291,7 @@
 
                 // Process and categorize menu items
                 allMenuItems = data.map((item, index) => ({
-                    id: item.id || index + 1,
+                    id: item.id,
                     name: item.name,
                     price: item.price,
                     description: item.description,
@@ -585,13 +585,53 @@
             total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
         });
         
-        hideCustomerModal();
-        document.getElementById('successModal').classList.remove('hidden');
+        // Sukses kirim pesanan
+hideCustomerModal();
+document.getElementById('successModal').classList.remove('hidden');
+
+// Simpan info pesanan untuk dikirim ke Telegram/WA
+const pesanUser = `
+Pesanan Baru dari ${nama}:
+---------------------
+${cart.map(item => `• ${item.name} x ${item.quantity} = Rp ${(item.price * item.quantity).toLocaleString()}`).join('\n')}
+Total: Rp ${cart.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}
+Alamat: ${alamat}
+Metode: ${metode}
+Catatan: ${catatan || '-'}
+Nomor HP: ${noTelp}
+`;
+
+window.latestOrderMessage = encodeURIComponent(pesanUser); // Simpan untuk dibuka oleh tombol
         
     } catch (error) {
         console.error('Error menyimpan pesanan:', error);
         alert('Terjadi kesalahan saat menyimpan pesanan. Silakan coba lagi.');
     }
+}
+function updateContactLinks() {
+    const baseTelegramBot = 'https://t.me/kananrezkybot'; // GANTI dengan username bot Anda
+    const ownerTelegramChatId = '844673353'; // GANTI dengan chat_id owner
+    const tokenBot = '7616236694:AAE58oQYsSiTjBlPIYY4yLIv6_W9GwYX5Do'; // GANTI dengan token bot
+
+    const waNumber = '6282334935818'; // GANTI dengan nomor WhatsApp owner tanpa +, awali 62
+    const msg = window.latestOrderMessage;
+
+    // Update link ke Telegram bot
+    document.getElementById('hubungiTelegram').href = `${baseTelegramBot}?start=start`;
+
+    // Update link ke WhatsApp
+    document.getElementById('hubungiWhatsapp').href = `https://wa.me/${waNumber}?text=${msg}`;
+
+    // Kirim notifikasi ke Telegram Owner (async)
+    fetch(`https://api.telegram.org/bot${tokenBot}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: ownerTelegramChatId,
+            text: decodeURIComponent(msg),
+            parse_mode: 'Markdown'
+        })
+    }).then(res => res.json()).then(console.log).catch(console.error);
 }
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a30ab252687e2e',t:'MTc1NDM2MjgwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
