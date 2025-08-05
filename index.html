@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dapur Kana - Menu Interaktif</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
@@ -46,9 +47,25 @@
             </button>
         </div>
 
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-12">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p class="text-gray-600">Memuat menu...</p>
+        </div>
+
         <!-- Menu Items -->
-        <div id="menuContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div id="menuContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
             <!-- Items will be populated by JavaScript -->
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="text-center py-12 hidden">
+            <div class="text-red-500 text-6xl mb-4">⚠️</div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">Gagal Memuat Menu</h3>
+            <p class="text-gray-600 mb-4">Silakan periksa koneksi Supabase Anda</p>
+            <button onclick="loadMenuFromSupabase()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg">
+                Coba Lagi
+            </button>
         </div>
     </div>
 
@@ -124,16 +141,111 @@
     </div>
 
     <script>
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js">
-  const supabaseUrl = 'https://artqoamgcuwyvuprpvgt.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydHFvYW1nY3V3eXZ1cHJwdmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMjQzODMsImV4cCI6MjA2OTkwMDM4M30.yEED0Dte55TYy6UOkJ0wVVkeYjAtcDk18MRGMLhxIpY';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-  
-    
+        // Supabase Configuration
+        // GANTI DENGAN URL DAN ANON KEY SUPABASE ANDA
+        const SUPABASE_URL = 'https://artqoamgcuwyvuprpvgt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFydHFvYW1nY3V3eXZ1cHJwdmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzMjQzODMsImV4cCI6MjA2OTkwMDM4M30.yEED0Dte55TYy6UOkJ0wVVkeYjAtcDk18MRGMLhxIpY';
+        
+        let supabase;
+        let menuData = {
+            dessert: [],
+            makanan: [],
+            frozen: []
+        };
+        let allMenuItems = [];
+        let currentCategory = 'dessert';
+        let cart = [];
+
+        // Initialize Supabase
+        function initSupabase() {
+            try {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                return true;
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+                return false;
+            }
+        }
+
+        // Load menu from Supabase
+        async function loadMenuFromSupabase() {
+            // Show loading state
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('menuContainer').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+
+            try {
+                if (!supabase) {
+                    throw new Error('Supabase not initialized');
+                }
+
+                const { data, error } = await supabase
+                    .from('menu')
+                    .select('*')
+                    .order('name');
+
+                if (error) {
+                    throw error;
+                }
+
+                // Process and categorize menu items
+                allMenuItems = data.map((item, index) => ({
+                    id: item.id || index + 1,
+                    name: item.name,
+                    price: item.price,
+                    description: item.description,
+                    category: item.category.toLowerCase(),
+                    image_url: item.image_url
+                }));
+
+                // Group by category
+                menuData = {
+                    dessert: allMenuItems.filter(item => item.category === 'dessert'),
+                    makanan: allMenuItems.filter(item => item.category === 'makanan'),
+                    frozen: allMenuItems.filter(item => item.category === 'frozen')
+                };
+
+                // Update category buttons with counts
+                updateCategoryButtons();
+
+                // Hide loading and show menu
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('menuContainer').classList.remove('hidden');
+                
+                // Display current category
+                displayMenu(currentCategory);
+
+            } catch (error) {
+                console.error('Error loading menu:', error);
+                
+                // Show error state
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+            }
+        }
+
+        // Update category buttons with item counts
+        function updateCategoryButtons() {
+            const dessertBtn = document.querySelector('[data-category="dessert"]');
+            const makananBtn = document.querySelector('[data-category="makanan"]');
+            const frozenBtn = document.querySelector('[data-category="frozen"]');
+
+            dessertBtn.innerHTML = `Dessert (${menuData.dessert.length} item)`;
+            makananBtn.innerHTML = `Makanan (${menuData.makanan.length} item)`;
+            frozenBtn.innerHTML = `Frozen (${menuData.frozen.length} item)`;
+        }
+
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            displayMenu(currentCategory);
+        document.addEventListener('DOMContentLoaded', async function() {
             setupEventListeners();
+            
+            // Initialize Supabase and load menu
+            if (initSupabase()) {
+                await loadMenuFromSupabase();
+            } else {
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('errorState').classList.remove('hidden');
+            }
         });
 
         function setupEventListeners() {
@@ -171,60 +283,63 @@
             displayMenu(category);
         }
 
-        async function displayMenu(category) {
-    consasync function displayMenu() {
-    const { data: items, error } = await supabase
-        .from('menu')
-        .select('*');
-
-    if (error) {
-        console.error('Gagal memuat menu:', error.message);
-        return;
-    }
-
-    console.log("Data menu:", items);
-
-    const container = document.getElementById('menuContainer');
-    if (!container) {
-        console.error('Elemen #menuContainer tidak ditemukan!');
-        return;
-    }
-
-    if (items.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Belum ada menu tersedia.</p>';
-        return;
-    }
-
-    container.innerHTML = items.map(item => `
-        <div class="item-card bg-white rounded-xl shadow-sm overflow-hidden">
-            <div class="flex">
-                <div class="w-24 h-24 bg-gray-100 flex items-center justify-center overflow-hidden">
-                    <img src="${item.image_url || 'https://via.placeholder.com/96'}" alt="${item.name}" class="object-cover w-full h-full">
-                </div>
-                <div class="flex-1 p-4">
-                    <h3 class="font-semibold text-gray-800 mb-1">${item.name}</h3>
-                    <p class="text-sm text-gray-600 mb-2">${item.description || ''}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-lg font-bold text-red-500">Rp ${item.price?.toLocaleString() || '0'}</span>
-                        <button onclick="addToCart(${item.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                            Tambah
-                        </button>
+        function displayMenu(category) {
+            const container = document.getElementById('menuContainer');
+            const items = menuData[category] || [];
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <div class="text-gray-400 text-6xl mb-4">🍽️</div>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada Menu</h3>
+                        <p class="text-gray-500">Menu untuk kategori ${category} belum tersedia</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = items.map(item => `
+                <div class="item-card bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="flex">
+                        <div class="w-24 h-24 flex-shrink-0 overflow-hidden">
+                            ${item.image_url ? 
+                                `<img src="${item.image_url}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                 <div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 items-center justify-center text-2xl hidden">🍽️</div>` :
+                                `<div class="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-2xl">🍽️</div>`
+                            }
+                        </div>
+                        <div class="flex-1 p-4">
+                            <h3 class="font-semibold text-gray-800 mb-1">${item.name}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${item.description || 'Tidak ada deskripsi'}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-bold text-red-500">Rp ${item.price.toLocaleString()}</span>
+                                <button onclick="addToCart(${item.id})" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                    Tambah
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    `).join('');
-}
-        function addToCart(id, name, price) {
-    const existingItem = cart.find(i => i.id === id);
-    if (existingItem) {
-        existingItem.quantity += 1;
-    } else {
-        cart.push({ id, name, price, quantity: 1 });
-    }
+            `).join('');
+        }
 
-    updateCartDisplay();
-}
+        function addToCart(itemId) {
+            const item = allMenuItems.find(i => i.id === itemId);
+            
+            if (!item) {
+                console.error('Item not found:', itemId);
+                return;
+            }
+            
+            const existingItem = cart.find(i => i.id === itemId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...item, quantity: 1 });
+            }
+            
+            updateCartDisplay();
+        }
 
         function updateCartDisplay() {
             const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -322,5 +437,5 @@
             document.getElementById('successModal').classList.remove('hidden');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'969f5aabe1f57e8d',t:'MTc1NDMyNDEzNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a2f3557235f904',t:'MTc1NDM2MTg0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
