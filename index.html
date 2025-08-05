@@ -37,13 +37,13 @@
         <!-- Category Tabs -->
         <div class="flex space-x-2 mb-8 bg-white p-2 rounded-xl shadow-sm">
             <button class="category-btn category-active text-white px-6 py-3 rounded-lg font-medium flex-1" data-category="dessert">
-                Dessert
+                Dessert (7-10K)
             </button>
             <button class="category-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium flex-1 hover:bg-gray-200" data-category="makanan">
-                Makanan
+                Makanan (10-20K)
             </button>
             <button class="category-btn bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-medium flex-1 hover:bg-gray-200" data-category="frozen">
-                Frozen
+                Frozen (15-20K)
             </button>
         </div>
 
@@ -117,6 +117,16 @@
                         <textarea id="customerAddress" required rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Metode Pembayaran</label>
+                        <select id="customerMethod" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih metode pembayaran...</option>
+                        </select>
+                        <div id="paymentDetails" class="mt-3 p-3 bg-blue-50 rounded-lg hidden">
+                            <p class="text-sm text-blue-800 font-medium mb-1">Detail Pembayaran:</p>
+                            <p id="paymentInfo" class="text-sm text-blue-700"></p>
+                        </div>
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Khusus (Opsional)</label>
                         <textarea id="customerNotes" rows="2" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
                     </div>
@@ -153,6 +163,7 @@
             frozen: []
         };
         let allMenuItems = [];
+        let paymentMethods = [];
         let currentCategory = 'dessert';
         let cart = [];
 
@@ -164,6 +175,96 @@
             } catch (error) {
                 console.error('Error initializing Supabase:', error);
                 return false;
+            }
+        }
+
+        // Load payment methods from Supabase
+        async function loadPaymentMethods() {
+            try {
+                const { data, error } = await supabase
+                    .from('metode')
+                    .select('*')
+                    .order('bank');
+
+                if (error) {
+                    throw error;
+                }
+
+                paymentMethods = data;
+                populatePaymentDropdown();
+
+            } catch (error) {
+                console.error('Error loading payment methods:', error);
+                // Add default options if database fails
+                paymentMethods = [
+                    { bank: 'QRIS', nama: 'QRIS', no_rek: 'Scan QR Code' },
+                    { bank: 'COD', nama: 'Cash on Delivery', no_rek: 'Bayar saat terima' }
+                ];
+                populatePaymentDropdown();
+            }
+        }
+
+        // Populate payment method dropdown
+        function populatePaymentDropdown() {
+            const methodSelect = document.getElementById('customerMethod');
+            
+            // Clear existing options except the first one
+            methodSelect.innerHTML = '<option value="">Pilih metode pembayaran...</option>';
+            
+            // Add QRIS and COD first
+            const qris = paymentMethods.find(method => method.bank.toLowerCase() === 'qris');
+            const cod = paymentMethods.find(method => method.bank.toLowerCase() === 'cod');
+            
+            if (qris) {
+                methodSelect.innerHTML += `<option value="${qris.bank}">${qris.nama}</option>`;
+            }
+            if (cod) {
+                methodSelect.innerHTML += `<option value="${cod.bank}">${cod.nama}</option>`;
+            }
+            
+            // Add transfer options
+            const transferMethods = paymentMethods.filter(method => 
+                !['qris', 'cod'].includes(method.bank.toLowerCase())
+            );
+            
+            if (transferMethods.length > 0) {
+                methodSelect.innerHTML += '<option disabled>── Transfer Bank ──</option>';
+                transferMethods.forEach(method => {
+                    methodSelect.innerHTML += `<option value="${method.bank}">Transfer ${method.bank} - ${method.nama}</option>`;
+                });
+            }
+        }
+
+        // Handle payment method selection
+        function handlePaymentMethodChange() {
+            const methodSelect = document.getElementById('customerMethod');
+            const paymentDetails = document.getElementById('paymentDetails');
+            const paymentInfo = document.getElementById('paymentInfo');
+            
+            const selectedMethod = methodSelect.value;
+            
+            if (!selectedMethod) {
+                paymentDetails.classList.add('hidden');
+                return;
+            }
+            
+            const method = paymentMethods.find(m => m.bank === selectedMethod);
+            
+            if (method) {
+                let infoText = '';
+                
+                if (method.bank.toLowerCase() === 'qris') {
+                    infoText = `${method.nama} - ${method.no_rek}`;
+                } else if (method.bank.toLowerCase() === 'cod') {
+                    infoText = `${method.nama} - ${method.no_rek}`;
+                } else {
+                    infoText = `Bank: ${method.bank}<br>Nama: ${method.nama}<br>No. Rekening: ${method.no_rek}`;
+                }
+                
+                paymentInfo.innerHTML = infoText;
+                paymentDetails.classList.remove('hidden');
+            } else {
+                paymentDetails.classList.add('hidden');
             }
         }
 
@@ -239,9 +340,12 @@
         document.addEventListener('DOMContentLoaded', async function() {
             setupEventListeners();
             
-            // Initialize Supabase and load menu
+            // Initialize Supabase and load data
             if (initSupabase()) {
-                await loadMenuFromSupabase();
+                await Promise.all([
+                    loadMenuFromSupabase(),
+                    loadPaymentMethods()
+                ]);
             } else {
                 document.getElementById('loadingState').classList.add('hidden');
                 document.getElementById('errorState').classList.remove('hidden');
@@ -266,6 +370,9 @@
 
             // Form submission
             document.getElementById('customerForm').addEventListener('submit', handleFormSubmit);
+            
+            // Payment method change
+            document.getElementById('customerMethod').addEventListener('change', handlePaymentMethodChange);
         }
 
         function switchCategory(category) {
@@ -418,24 +525,74 @@
             document.getElementById('customerForm').reset();
         }
 
-        function handleFormSubmit(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('customerName').value;
-            const phone = document.getElementById('customerPhone').value;
-            const address = document.getElementById('customerAddress').value;
-            const notes = document.getElementById('customerNotes').value;
-            
-            // Here you would normally send the order to a server
-            console.log('Order submitted:', {
-                customer: { name, phone, address, notes },
-                items: cart,
-                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-            });
-            
-            hideCustomerModal();
-            document.getElementById('successModal').classList.remove('hidden');
+        async function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    const nama = document.getElementById('customerName').value;
+    const noTelp = document.getElementById('customerPhone').value;
+    const alamat = document.getElementById('customerAddress').value;
+    const metode = document.getElementById('customerMethod').value;
+    const catatan = document.getElementById('customerNotes').value;
+    
+    // Siapkan data pesanan
+    const dataPesanan = {
+        nama: nama,
+        no_tlp: noTelp,
+        alamat: alamat,
+        metode: metode,
+        catatan: catatan || null
+    };
+    
+    try {
+        // Simpan pesanan ke Supabase
+        const { data, error } = await supabase
+            .from('pesanan')
+            .insert([dataPesanan])
+            .select();
+        
+        if (error) {
+            throw error;
         }
+        
+        // Simpan item pesanan jika pesanan utama berhasil
+        if (data && data[0]) {
+            const idPesanan = data[0].id;
+            
+            // Siapkan data item pesanan
+            const itemPesanan = cart.map(item => ({
+                id_pesanan: idPesanan,
+                id_menu: item.id,
+                nama_item: item.name,
+                harga_satuan: item.price,
+                jumlah: item.quantity,
+                subtotal: item.price * item.quantity
+            }));
+            
+            // Simpan item pesanan ke database
+            const { error: errorItem } = await supabase
+                .from('item_pesanan')
+                .insert(itemPesanan);
+            
+            if (errorItem) {
+                console.error('Error menyimpan item pesanan:', errorItem);
+                alert('Pesanan tersimpan tapi ada masalah dengan detail item. Silakan hubungi admin.');
+            }
+        }
+        
+        console.log('Pesanan berhasil disimpan:', {
+            pesanan: data[0],
+            items: cart,
+            total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        });
+        
+        hideCustomerModal();
+        document.getElementById('successModal').classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Error menyimpan pesanan:', error);
+        alert('Terjadi kesalahan saat menyimpan pesanan. Silakan coba lagi.');
+    }
+}
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a2f3557235f904',t:'MTc1NDM2MTg0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a30ab252687e2e',t:'MTc1NDM2MjgwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
