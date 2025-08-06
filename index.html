@@ -14,28 +14,28 @@
         .item-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .order-btn { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); }
         .order-btn:hover { background: linear-gradient(135deg, #ee5a24 0%, #ff6b6b 100%); }
+  .fly-to-cart {position: fixed;z-index: 1000;pointer-events: none;transition: transform 0.7s ease-in-out, opacity 0.7s;}
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <h1 class="flex items-center gap-2 text-3xl font-bold text-gray-800">
-  <img src="https://artqoamgcuwyvuprpvgt.supabase.co/storage/v1/object/public/logo//ACTUAL%20DESIGN%20-%20This%20is%20what%20we%20publish!_20250801_191507_0000.jpg" alt="Logo" class="h-8 w-8 object-contain rounded-lg">
-  Dapur Kana
-</h1>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Total Pesanan:</span>
-                    <span id="totalItems" class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">0</span>
-                    <button id="viewOrderBtn" class="order-btn text-white px-6 py-2 rounded-lg font-medium">
-                        Lihat Pesanan
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-4 py-4">
+    <div class="flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <img src="https://artqoamgcuwyvuprpvgt.supabase.co/storage/v1/object/public/logo/ACTUAL%20DESIGN%20-%20This%20is%20what%20we%20publish!_20250801_191507_0000.jpg" alt="Logo" class="h-10 w-10 rounded-full object-cover">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dapur Kana</h1>
+      </div>
+      <div class="flex items-center space-x-4 w-full sm:w-auto">
+        <span class="text-sm text-gray-600">Total Pesanan:</span>
+        <span id="totalItems" class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">0</span>
+        <button id="viewOrderBtn" class="order-btn text-white px-6 py-2 rounded-lg font-medium w-full sm:w-auto">
+          Lihat Pesanan
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
     <div class="max-w-6xl mx-auto px-4 py-8">
         <!-- Category Tabs -->
         <div class="flex space-x-2 mb-8 bg-white p-2 rounded-xl shadow-sm">
@@ -424,7 +424,7 @@
                             <p class="text-sm text-gray-600 mb-2">${item.description || 'Tidak ada deskripsi'}</p>
                             <div class="flex justify-between items-center">
                                 <span class="text-lg font-bold text-red-500">Rp ${item.price.toLocaleString()}</span>
-                                <button onclick="addToCart('${item.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                                <button onclick="addToCartWithEffect(this,'${item.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
   Tambah
 </button>
                             </div>
@@ -637,6 +637,40 @@ function updateContactLinks() {
             parse_mode: 'Markdown'
         })
     }).then(res => res.json()).then(console.log).catch(console.error);
+}
+        function animateToCart(sourceElement) {
+  const cartIcon = document.getElementById('totalItems');
+  const rectStart = sourceElement.getBoundingClientRect();
+  const rectEnd = cartIcon.getBoundingClientRect();
+
+  const clone = sourceElement.cloneNode(true);
+  clone.classList.add('fly-to-cart');
+  document.body.appendChild(clone);
+
+  clone.style.left = rectStart.left + 'px';
+  clone.style.top = rectStart.top + 'px';
+  clone.style.width = rectStart.width + 'px';
+  clone.style.height = rectStart.height + 'px';
+  clone.style.opacity = 1;
+
+  // Hitung arah dan jarak
+  const deltaX = rectEnd.left - rectStart.left;
+  const deltaY = rectEnd.top - rectStart.top;
+
+  // Pakai timeout untuk jalankan animasi
+  setTimeout(() => {
+    clone.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.2)`;
+    clone.style.opacity = 0;
+  }, 10);
+
+  // Hapus setelah animasi selesai
+  setTimeout(() => {
+    clone.remove();
+  }, 800);
+}
+        function addToCartWithEffect(buttonEl, itemId) {
+  addToCart(itemId);
+  animateToCart(buttonEl);
 }
     </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96a30ab252687e2e',t:'MTc1NDM2MjgwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
