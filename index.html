@@ -458,41 +458,36 @@
         }
 
         function showOrderModal() {
-            if (cart.length === 0) {
-                alert('Keranjang pesanan masih kosong!');
-                return;
-            }
-            
-            const orderList = document.getElementById('orderList');
-            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            
-            orderList.innerHTML = cart.map(item => `
-                <div class="flex justify-between items-center py-3 border-b">
-                    <div class="flex-1">
-                        <h4 class="font-medium">${item.name}</h4>
-                        <p class="text-sm text-gray-600">Rp ${item.price.toLocaleString()} x ${item.quantity}</p>
-                    cartItemsContainer.innerHTML = cart.map(item => `
-  <div class="flex justify-between items-center border-b py-2">
-    <div>
-      <h3 class="font-semibold">${item.name}</h3>
-      <p class="text-sm text-gray-600">Rp${item.price} x ${item.quantity} = Rp${item.price * item.quantity}</p>
-    </div>
-    <div class="flex items-center space-x-2">
-      <button onclick="updateQuantity('${item.id}', -1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full">-</button>
-      <span class="w-8 text-center">${item.quantity}</span>
-      <button onclick="updateQuantity('${item.id}', 1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full">+</button>
-      <button onclick="removeFromCart('${item.id}')" class="text-red-500 ml-2">🗑️</button>
-    </div>
-  </div>
-`).join('');
-            
-            document.getElementById('totalPrice').textContent = `Rp ${totalPrice.toLocaleString()}`;
-            document.getElementById('orderModal').classList.remove('hidden');
-        }
+  if (cart.length === 0) {
+    alert('Keranjang pesanan masih kosong!');
+    return;
+  }
 
-        function hideOrderModal() {
-            document.getElementById('orderModal').classList.add('hidden');
-        }
+  const orderList = document.getElementById('orderList');
+  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  // Isi daftar item dalam modal pesanan
+  orderList.innerHTML = cart.map(item => `
+    <div class="flex justify-between items-center py-3 border-b">
+      <div class="flex-1">
+        <h4 class="font-medium">${item.name}</h4>
+        <p class="text-sm text-gray-600">Rp ${item.price.toLocaleString()} x ${item.quantity}</p>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="updateQuantity('${item.id}', -1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full">-</button>
+        <span class="w-8 text-center">${item.quantity}</span>
+        <button onclick="updateQuantity('${item.id}', 1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full">+</button>
+        <button onclick="removeFromCart('${item.id}')" class="text-red-500 ml-2">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Tampilkan total harga
+  document.getElementById('totalPrice').textContent = `Rp ${totalPrice.toLocaleString()}`;
+
+  // Tampilkan modal
+  document.getElementById('orderModal').classList.remove('hidden');
+}
 
         function updateQuantity(itemId, change) {
             const item = cart.find(i => i.id === itemId);
