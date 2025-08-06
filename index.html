@@ -466,7 +466,7 @@
   const orderList = document.getElementById('orderList');
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-  // Isi daftar item dalam modal pesanan
+  // Tampilkan isi keranjang
   orderList.innerHTML = cart.map(item => `
     <div class="flex justify-between items-center py-3 border-b">
       <div class="flex-1">
@@ -488,7 +488,6 @@
   // Tampilkan modal
   document.getElementById('orderModal').classList.remove('hidden');
 }
-
         function updateQuantity(itemId, change) {
             const item = cart.find(i => i.id === itemId);
             if (item) {
