@@ -149,6 +149,7 @@
     <p class="text-gray-600 mb-6">Kami akan segera menghubungi Anda. Anda juga bisa langsung hubungi kami:</p>
     <div class="flex flex-col gap-3 mb-6">
       <a href="#" id="hubungiTelegram" target="_blank" class="bg-blue-500 text-white px-4 py-3 rounded-lg font-medium">Hubungi via Telegram</a>
+        <a href="https://t.me/priliautami" target="_blank" class="bg-gray-700 text-white px-4 py-3 rounded-lg font-medium">Hubungi Penjual Langsung</a>
       <a href="#" id="hubungiWhatsapp" target="_blank" class="bg-green-500 text-white px-4 py-3 rounded-lg font-medium">Hubungi via WhatsApp</a>
     </div>
     <button id="closeSuccessModal" class="order-btn text-white px-8 py-3 rounded-lg font-medium">Tutup</button>
@@ -617,16 +618,23 @@ Nomor HP: ${noTelp}
 `;
 
 window.latestOrderMessage = encodeURIComponent(pesanUser); // Simpan untuk dibuka oleh tombol
-        
+        // Kirim notifikasi ke backend untuk proses otomatis ke owner dan user (jika Telegram)
+fetch("https://new-dapur-kana-4t7u.vercel.app/api/notifikasi", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ id_pesanan: data[0].id })
+});
     } catch (error) {
         console.error('Error menyimpan pesanan:', error);
         alert('Terjadi kesalahan saat menyimpan pesanan. Silakan coba lagi.');
     }
 }
 function updateContactLinks() {
-    const baseTelegramBot = 'https://t.me/kananrezkybot'; // GANTI dengan username bot Anda
+    const baseTelegramBot = 'https://t.me/Dapurkanabot'; // GANTI dengan username bot Anda
     const ownerTelegramChatId = '844673353'; // GANTI dengan chat_id owner
-    const tokenBot = '7616236694:AAE58oQYsSiTjBlPIYY4yLIv6_W9GwYX5Do'; // GANTI dengan token bot
+    const tokenBot = '7981245691:AAHUZvl-qlWjyCpTAOOR0h3K1_pflUHNhO8'; // GANTI dengan token bot
 
     const waNumber = '6282334935818'; // GANTI dengan nomor WhatsApp owner tanpa +, awali 62
     const msg = window.latestOrderMessage;
