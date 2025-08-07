@@ -348,17 +348,18 @@ if (uid) {
 }
             
             // Initialize Supabase and load data
-            if (initSupabase()) {
-                await Promise.all([
-                    loadMenuFromSupabase(),
-                    loadPaymentMethods()
-                ]);
-            } else {
-                document.getElementById('loadingState').classList.add('hidden');
-                document.getElementById('errorState').classList.remove('hidden');
-            }
-        });
-
+            window.addEventListener('DOMContentLoaded', async () => {
+    if (initSupabase()) {
+        await Promise.all([
+            loadMenuFromSupabase(),
+            loadPaymentMethods()
+        ]);
+    } else {
+        document.getElementById('loadingState').classList.add('hidden');
+        document.getElementById('errorState').classList.remove('hidden');
+    }
+    setupEventListeners(); // ← ini juga pastikan dijalankan
+});
         function setupEventListeners() {
             // Category buttons
             document.querySelectorAll('.category-btn').forEach(btn => {
