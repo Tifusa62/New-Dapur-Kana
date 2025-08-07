@@ -340,9 +340,12 @@
             frozenBtn.innerHTML = `Frozen (${menuData.frozen.length})`;
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async function() {
-            setupEventListeners();
+        const urlParams = new URLSearchParams(window.location.search);
+const uid = urlParams.get('uid');
+if (uid) {
+    localStorage.setItem('akses_via', 'telegram');
+    localStorage.setItem('telegram_user_id', uid);
+}
             
             // Initialize Supabase and load data
             if (initSupabase()) {
@@ -538,13 +541,18 @@
     const catatan = document.getElementById('customerNotes').value;
     
     // Siapkan data pesanan
-    const dataPesanan = {
-        nama: nama,
-        no_tlp: noTelp,
-        alamat: alamat,
-        metode: metode,
-        catatan: catatan || null
-    };
+    const aksesVia = localStorage.getItem('akses_via'); // 'telegram' atau 'whatsapp'
+const telegramUserId = localStorage.getItem('telegram_user_id'); // dari URL atau /start
+
+const dataPesanan = {
+    nama: nama,
+    no_tlp: noTelp,
+    alamat: alamat,
+    metode: metode,
+    catatan: catatan || null,
+    akses_via: aksesVia || null,
+    user_id: aksesVia === 'telegram' ? telegramUserId : null
+};
     
     try {
         // Simpan pesanan ke Supabase
