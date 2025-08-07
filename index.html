@@ -554,7 +554,7 @@ const dataPesanan = {
     metode: metode,
     catatan: catatan || null,
     akses_via: aksesVia || null,
-    user_id: aksesVia === 'telegram' ? telegramUserId : null
+    user_id: aksesVia === 'telegram' ? Number(telegramUserId) : null
 };
     
     try {
