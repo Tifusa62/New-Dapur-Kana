@@ -340,12 +340,14 @@
             frozenBtn.innerHTML = `Frozen (${menuData.frozen.length})`;
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-const uid = urlParams.get('uid');
-if (uid) {
+        (function persistTelegramUID() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const uid = urlParams.get('uid');
+  if (uid && !localStorage.getItem('telegram_user_id')) {
     localStorage.setItem('akses_via', 'telegram');
     localStorage.setItem('telegram_user_id', uid);
-}
+  }
+})();
             
             // Initialize Supabase and load data
             window.addEventListener('DOMContentLoaded', async () => {
