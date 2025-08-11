@@ -18,6 +18,31 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+<div id="popup-notice" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+  <div style="background-color: white; padding: 20px; border-radius: 10px; position: relative; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+    
+    <!-- Tombol silang -->
+    <span id="popup-close" style="position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 20px; font-weight: bold;">&times;</span>
+    
+    <!-- Isi pesan -->
+    <h2 style="color: #004d4d; margin-bottom: 10px;">📢 Pemberitahuan</h2>
+    <p style="color: #333; font-size: 14px; line-height: 1.5;">
+      Order melalui website ini <b>khusus Pre-Order</b>.<br>
+      Pesanan untuk <b>hari ini</b> akan dikirim <b>besok</b>.<br>
+      Setelah melakukan order, <b>wajib chat penjual</b> untuk konfirmasi.
+    </p>
+  </div>
+</div>
+
+<script>
+  window.onload = function() {
+    document.getElementById('popup-notice').style.display = 'flex';
+  };
+
+  document.getElementById('popup-close').onclick = function() {
+    document.getElementById('popup-notice').style.display = 'none';
+  };
+</script>
     <!-- Header -->
 <header class="bg-white shadow-sm sticky top-0 z-50">
   <div class="max-w-6xl mx-auto px-4 py-4">
